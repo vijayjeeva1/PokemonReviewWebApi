@@ -1,13 +1,14 @@
-﻿using PokemonReviewWebApi.Models;
+﻿using PokemonReviewWebApi.Dto;
+using PokemonReviewWebApi.Models;
 
 namespace PokemonReviewWebApi.Interfaces
 {
     public interface IPokemonRepository
     {
-        ICollection<Pokemon> GetPokemons();
+        ICollection<PokemonDto> GetPokemons();
 
-        Pokemon GetPokemon(int id);
-        Pokemon GetPokemon(string name);
+        PokemonDto GetPokemon(int id);
+        PokemonDto GetPokemon(string name);
         decimal GetPokemonRating(int id);
         bool PokemonExists(int id);
     }

@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PokemonReviewWebApi.Dto;
+using PokemonReviewWebApi.Helper;
 using PokemonReviewWebApi.Interfaces;
 using PokemonReviewWebApi.Models;
 using System.Collections.Generic;
@@ -54,7 +54,7 @@ namespace PokemonReviewWebApi.Controllers
         }
 
         [HttpGet("{pokeId}/rating")]
-        [ProducesResponseType(200, Type = typeof(Pokemon))]
+        [ProducesResponseType(200, Type = typeof(decimal))]
         [ProducesResponseType(400)]
         public IActionResult GetPokemonRating(int pokeId)
         {

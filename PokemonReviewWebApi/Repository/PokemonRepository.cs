@@ -1,4 +1,7 @@
-﻿using PokemonReviewWebApi.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PokemonReviewWebApi.Data;
+using PokemonReviewWebApi.Dto;
+using PokemonReviewWebApi.Helper;
 using PokemonReviewWebApi.Interfaces;
 using PokemonReviewWebApi.Models;
 
@@ -7,19 +10,24 @@ namespace PokemonReviewWebApi.Repository
     public class PokemonRepository : IPokemonRepository
     {
         private readonly DataContext _context;
+        private readonly MapperService _mapperService = new MapperService();
+
         public PokemonRepository(DataContext context) 
         {
             _context = context;
+            _mapperService.RegisterMapper(new PokemonToDtoMapper());
         }
 
-        public Pokemon GetPokemon(int id)
+        public PokemonDto GetPokemon(int id)
         {
-            return _context.Pokemon.FirstOrDefault(p => p.Id == id);
+            var pokemon = _context.Pokemon.FirstOrDefault(p => p.Id == id);
+            return _mapperService.Map<Pokemon, PokemonDto>(pokemon);
         }
 
-        public Pokemon GetPokemon(string name)
+        public PokemonDto GetPokemon(string name)
         {
-            return _context.Pokemon.FirstOrDefault(p => p.Name == name);
+            var pokemon = _context.Pokemon.FirstOrDefault(p => p.Name == name);
+            return _mapperService.Map<Pokemon, PokemonDto>(pokemon);
         }
 
         public decimal GetPokemonRating(int id)
@@ -34,9 +42,17 @@ namespace PokemonReviewWebApi.Repository
             return ((decimal)reviews.Sum(r => r.Rating) / reviews.Count());
         }
 
-        public ICollection<Pokemon> GetPokemons()
+        public ICollection<PokemonDto> GetPokemons()
         {
-            return _context.Pokemon.OrderBy(p => p.Id).ToList();
+            var pokemons = _context.Pokemon.OrderBy(p => p.Id).ToList();
+            List<PokemonDto> pokemonDtos = new List<PokemonDto>();
+            foreach (var pokemon in pokemons)
+            {
+                var pokemonDto = _mapperService.Map<Pokemon, PokemonDto>(pokemon);
+                pokemonDtos.Add(pokemonDto);
+            }
+
+            return pokemonDtos;
         }
 
         public bool PokemonExists(int id)
