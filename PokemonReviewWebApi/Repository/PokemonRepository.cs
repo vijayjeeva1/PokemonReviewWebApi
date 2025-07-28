@@ -16,7 +16,7 @@ namespace PokemonReviewWebApi.Repository
         {
             _context = context;
             _mapperService.RegisterMapper(new PokemonToDtoMapper());
-            _mapperService.RegisterMapper(new PokemonDtoToPokemonMapper());
+            _mapperService.RegisterMapper(new PokemonWriteDtoToPokemonMapper());
         }
 
         public bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon)
@@ -93,6 +93,25 @@ namespace PokemonReviewWebApi.Repository
         public bool PokemonExists(int id)
         {
             return _context.Pokemon.Any(p => p.Id == id);
+        }
+
+        public bool UpdatePokemon(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            _context.Update(pokemon);
+            return Save();
+        }
+
+        public bool DeletePokemon(Pokemon pokemon)
+        {
+            // EntityFramework gets confused as it has a copy with the same key in memory and doesn't know which one is right
+            // Select the existing one
+            var existing = _context.Pokemon.FirstOrDefault(p => p.Id == pokemon.Id);
+            if (existing != null)
+            {
+                _context.Remove(existing);
+                _context.SaveChanges();
+            }
+            return false;
         }
 
         public bool Save()

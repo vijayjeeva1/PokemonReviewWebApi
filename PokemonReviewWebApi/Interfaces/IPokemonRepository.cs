@@ -12,5 +12,8 @@ namespace PokemonReviewWebApi.Interfaces
         decimal GetPokemonRating(int id);
         bool PokemonExists(int id);
         bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon);
+        bool UpdatePokemon(int ownerId, int categoryId, Pokemon pokemon);
+
+        bool DeletePokemon(Pokemon pokemon);
     }
 }

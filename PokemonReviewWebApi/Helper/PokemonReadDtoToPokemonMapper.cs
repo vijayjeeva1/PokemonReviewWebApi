@@ -4,12 +4,13 @@ using PokemonReviewWebApi.Models;
 
 namespace PokemonReviewWebApi.Helper
 {
-    public class PokemonDtoToPokemonMapper : IMapper<PokemonWriteDto, Pokemon>
+    public class PokemonReadDtoToPokemonMapper : IMapper<PokemonReadDto, Pokemon>
     {
-        public Pokemon Map(PokemonWriteDto source)
+        public Pokemon Map(PokemonReadDto source)
         {
             return new Pokemon
             {
+                Id = source.Id,
                 Name = source.Name,
                 BirthDate = source.BirthDate
             };
