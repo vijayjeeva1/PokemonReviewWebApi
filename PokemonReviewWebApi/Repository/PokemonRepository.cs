@@ -16,18 +16,48 @@ namespace PokemonReviewWebApi.Repository
         {
             _context = context;
             _mapperService.RegisterMapper(new PokemonToDtoMapper());
+            _mapperService.RegisterMapper(new PokemonDtoToPokemonMapper());
         }
 
-        public PokemonDto GetPokemon(int id)
+        public bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            var pokemonOwnerEntity = _context.Owners.Where(a => a.Id == ownerId).FirstOrDefault();
+            var category = _context.Categories.Where(a => a.Id == categoryId).FirstOrDefault();
+
+            // Need to create pokemonOwner and pokemonCategory as these are part of the many to many relationships
+            var pokemonOwner = new PokemonOwner()
+            {
+                Owner = pokemonOwnerEntity,
+                Pokemon = pokemon,
+            };
+
+            _context.Add(pokemonOwner);
+
+            var pokemonCategory = new PokemonCategory()
+            {
+                Category = category,
+                Pokemon = pokemon,
+            };
+
+            _context.Add(pokemonCategory);
+
+            // If there were no relationships, method would simply be this line and Save()
+            _context.Add(pokemon);
+
+            return Save();
+        }
+
+        public PokemonReadDto GetPokemon(int id)
         {
             var pokemon = _context.Pokemon.FirstOrDefault(p => p.Id == id);
-            return _mapperService.Map<Pokemon, PokemonDto>(pokemon);
+            return _mapperService.Map<Pokemon, PokemonReadDto>(pokemon);
         }
 
-        public PokemonDto GetPokemon(string name)
+        public PokemonReadDto GetPokemon(string name)
         {
             var pokemon = _context.Pokemon.FirstOrDefault(p => p.Name == name);
-            return _mapperService.Map<Pokemon, PokemonDto>(pokemon);
+            if (pokemon == null) return null;
+            return _mapperService.Map<Pokemon, PokemonReadDto>(pokemon);
         }
 
         public decimal GetPokemonRating(int id)
@@ -42,22 +72,33 @@ namespace PokemonReviewWebApi.Repository
             return ((decimal)reviews.Sum(r => r.Rating) / reviews.Count());
         }
 
-        public ICollection<PokemonDto> GetPokemons()
+        public ICollection<PokemonReadDto> GetPokemonsDto()
         {
             var pokemons = _context.Pokemon.OrderBy(p => p.Id).ToList();
-            List<PokemonDto> pokemonDtos = new List<PokemonDto>();
+            List<PokemonReadDto> pokemonDtos = new List<PokemonReadDto>();
             foreach (var pokemon in pokemons)
             {
-                var pokemonDto = _mapperService.Map<Pokemon, PokemonDto>(pokemon);
+                var pokemonDto = _mapperService.Map<Pokemon, PokemonReadDto>(pokemon);
                 pokemonDtos.Add(pokemonDto);
             }
 
             return pokemonDtos;
         }
 
+        public ICollection<Pokemon> GetPokemons()
+        {
+            return _context.Pokemon.OrderBy(p => p.Id).ToList();
+        }
+
         public bool PokemonExists(int id)
         {
             return _context.Pokemon.Any(p => p.Id == id);
+        }
+
+        public bool Save()
+        {
+            var saved = _context.SaveChanges();
+            return saved > 0 ? true : false;
         }
     }
 }

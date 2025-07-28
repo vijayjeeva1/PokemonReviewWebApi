@@ -12,17 +12,19 @@ namespace PokemonReviewWebApi.Controllers
     public class PokemonController : Controller
     {
         private readonly IPokemonRepository _pokemonRepository;
+        private readonly MapperService _mapperService = new MapperService();
 
         public PokemonController(IPokemonRepository pokemonRepository)
         {
             _pokemonRepository = pokemonRepository;
+            _mapperService.RegisterMapper(new PokemonDtoToPokemonMapper());
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<PokemonDto>))]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<PokemonWriteDto>))]
         public IActionResult GetPokemons()
         {
-            var pokemons = _pokemonRepository.GetPokemons();
+            var pokemons = _pokemonRepository.GetPokemonsDto();
 
             // validate
             if (!ModelState.IsValid)
@@ -34,7 +36,7 @@ namespace PokemonReviewWebApi.Controllers
         }
 
         [HttpGet("{pokeId}")]
-        [ProducesResponseType(200, Type = typeof(PokemonDto))]
+        [ProducesResponseType(200, Type = typeof(PokemonWriteDto))]
         [ProducesResponseType(400)]
         public IActionResult GetPokemon(int pokeId)
         {
@@ -71,6 +73,34 @@ namespace PokemonReviewWebApi.Controllers
             }
 
             return Ok(rating);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreatePokemon([FromQuery] int ownerId, [FromQuery] int catId, [FromBody] PokemonWriteDto pokemonCreate)
+        {
+            if (pokemonCreate == null)
+                return BadRequest(ModelState);
+
+            var pokemon = _mapperService.Map<PokemonWriteDto, Pokemon>(pokemonCreate);
+
+            if (_pokemonRepository.GetPokemon(pokemon.Name) != null)
+            {
+                ModelState.AddModelError("", "Pokemon already exists");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!_pokemonRepository.CreatePokemon(ownerId, catId, pokemon))
+            {
+                ModelState.AddModelError("", "Something went wrong while savin");
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok("Successfully created");
         }
     }
 }
